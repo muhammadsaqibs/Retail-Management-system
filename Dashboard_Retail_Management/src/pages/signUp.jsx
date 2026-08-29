@@ -24,7 +24,7 @@ const SignUp = () => {
 
   const loginMutation = useMutation({
     mutationFn: async (payload) => {
-      const res = await axiosInstance.post("/auth/signup", payload);
+      const res = await axiosInstance.post("/auth/login", payload);
       return res.data;
     },
     onSuccess: () => {
