@@ -84,9 +84,13 @@ const Billing = () => {
       
       toast.success("Order saved successfully");
       if (print) {
-        setTimeout(() => window.print(), 500);
+        setTimeout(() => {
+          window.print();
+          setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
+        }, 300);
+      } else {
+        setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
       }
-      setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
     } catch (err) {
       toast.error("Failed to save order");
     }

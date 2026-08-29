@@ -38,7 +38,15 @@ const Dashboard = () => {
         const res = await axiosInstance.get(`/dashboard/stats`, {
           params: { month: selectedMonth, role: role, storeId: storeUser?._id }
         });
-        setDbStats(res.data.stats);
+        let stats = res.data.stats;
+        
+        // Override orders for store user since they save to localStorage
+        if (role === "store") {
+          const localOrders = JSON.parse(localStorage.getItem("apex_orders_list") || "[]");
+          stats.totalOrders = localOrders.length;
+        }
+
+        setDbStats(stats);
       } catch (err) {
         toast.error("Dashboard sync failed");
       } finally {
