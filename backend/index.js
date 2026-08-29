@@ -35,6 +35,19 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Connect to DB for Serverless environment (Vercel)
+if (process.env.VERCEL) {
+  app.use(async (req, res, next) => {
+    try {
+      await connectMongo();
+      next();
+    } catch (err) {
+      console.error("MongoDB Connection Error in Vercel:", err);
+      res.status(500).json({ error: "Database connection failed", details: err.message });
+    }
+  });
+}
+
 app.get("/", (req, res) => {
   res.json({ status: "Backend running successfully on Railway" });
 });
@@ -61,10 +74,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Connect to DB for Serverless environment (Vercel)
-if (process.env.VERCEL) {
-  connectMongo().catch(console.error);
-} else {
+if (!process.env.VERCEL) {
   // Railway or Local environment
   const startServer = async () => {
     await connectMongo();
