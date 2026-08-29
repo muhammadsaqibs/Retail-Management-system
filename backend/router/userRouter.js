@@ -29,7 +29,7 @@ router.get("/check", protect, (req, res) => {
 router.put("/update-profile", protect, async (req, res) => {
   try {
     const { username, email } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -47,7 +47,7 @@ router.put("/update-profile", protect, async (req, res) => {
 router.put("/change-password", protect, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user.id).select("+password");
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
