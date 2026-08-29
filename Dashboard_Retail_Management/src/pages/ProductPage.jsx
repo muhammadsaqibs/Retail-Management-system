@@ -209,9 +209,6 @@ const ProductPage = () => {
                         {Number(p.Discount) > 0 && <span className="text-[9px] text-orange-500 font-black">Disc: {p.Discount}% Off</span>}
                     </div>
                   </td>
-                  <td className="px-6 md:px-8 py-5">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Rs. {Number(p.companyPrice || 0).toLocaleString()} / Rs. {Number(p.Price).toLocaleString()}</p>
-                  </td>
                   <td className="px-6 md:px-8 py-5 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button 
