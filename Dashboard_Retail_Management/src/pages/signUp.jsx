@@ -158,10 +158,10 @@ const SignUp = () => {
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Registered Store Name</label>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">USERNAME / ID</label>
                   <div className="relative">
                     <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={16} />
-                    <input type="text" placeholder="e.g. A.Biryani" className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#20b295] outline-none text-sm font-medium transition-all" onChange={(e) => setFormdata({ ...Formdata, storeName: e.target.value })} value={Formdata.storeName}/>
+                    <input type="text" placeholder="e.g. saad@gmail.com" className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#20b295] outline-none text-sm font-medium transition-all" onChange={(e) => setFormdata({ ...Formdata, storeName: e.target.value })} value={Formdata.storeName}/>
                   </div>
                 </div>
                 <div className="space-y-1.5 relative">

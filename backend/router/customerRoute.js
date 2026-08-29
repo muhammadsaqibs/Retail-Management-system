@@ -5,10 +5,10 @@ import mongoose  from "mongoose";
 // Customer Status Model
 const CustomerStatus = mongoose.model("CustomerStatus", new mongoose.Schema({
   name: { type: String, required: true },
-  contact: { type: String, required: true },
-  status: { type: String, enum: ["Silver", "Gold", "Platinum", "VIP"], default: "Silver" },
-  totalSpent: { type: Number, required: true },
-  lastVisit: { type: String, required: true }
+  contact: { type: String, default: "" },
+  status: { type: String, enum: ["Silver", "Gold", "Platinum", "VIP", "defaulter"], default: "Silver" },
+  totalSpent: { type: Number, default: 0 },
+  lastVisit: { type: String, default: "" }
 }));
 
 // API: Get all customers status

@@ -8,30 +8,34 @@ import axiosInstance from "../lib/axios";
 
 const CustomerStatus = () => {
   const [customers, setCustomers] = useState([]);
+  const [stores, setStores] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   
   const emptyCustomer = { 
-    name: "", contact: "", status: "Silver", totalSpent: "", lastVisit: new Date().toISOString().split('T')[0] 
+    name: "", status: "Silver" 
   };
   const [currentCustomer, setCurrentCustomer] = useState(emptyCustomer);
 
-  const fetchCustomers = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
-      const res = await axiosInstance.get("/customers/all");
-      // Backend returns { success: true, data: [] } usually, adjust if direct array
-      setCustomers(res.data.data || res.data || []);
+      const [resCustomers, resStores] = await Promise.all([
+        axiosInstance.get("/customers/all"),
+        axiosInstance.get("/stores/all")
+      ]);
+      setCustomers(resCustomers.data.data || resCustomers.data || []);
+      setStores(resStores.data.data || resStores.data || []);
     } catch (error) {
-      toast.error("Failed to load customer data");
+      toast.error("Failed to load data");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCustomers();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -40,8 +44,8 @@ const CustomerStatus = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!currentCustomer.name || !currentCustomer.contact || !currentCustomer.totalSpent) {
-      return toast.error("Please fill all required fields");
+    if (!currentCustomer.name) {
+      return toast.error("Please select a store");
     }
 
     try {
@@ -148,10 +152,8 @@ const CustomerStatus = () => {
           <table className="w-full text-left min-w-[800px]">
             <thead className="bg-gray-100/50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest">Customer Details</th>
+                <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest">Store Name</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest">Tier Status</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest">Total Spent</th>
-                <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest">Last Visit</th>
                 <th className="px-6 py-5 text-[10px] font-black uppercase text-gray-500 tracking-widest text-center">Actions</th>
               </tr>
             </thead>
@@ -169,18 +171,13 @@ const CustomerStatus = () => {
                 filteredCustomers.map((c) => (
                   <tr key={c._id} className="hover:bg-teal-50/30 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-gray-800 text-sm">{c.name}</span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{c.contact}</span>
-                      </div>
+                      <span className="font-bold text-gray-800 text-sm">{c.name}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${getStatusColor(c.status)}`}>
                         {c.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-black text-[#13786E] text-sm">Rs. {Number(c.totalSpent || 0).toLocaleString()}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-tighter">{c.lastVisit}</td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">
                         <button onClick={() => { setCurrentCustomer(c); setIsModalOpen(true); }} className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 shadow-sm transition-colors"><Edit2 size={16} /></button>
@@ -212,40 +209,29 @@ const CustomerStatus = () => {
             
             <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5">
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Customer Full Name</label>
-                <input 
-                  type="text" name="name" value={currentCustomer.name} onChange={handleChange}
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Select Store</label>
+                <select 
+                  name="name" 
+                  value={currentCustomer.name} 
+                  onChange={handleChange}
                   className="w-full border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-[#13786E] bg-gray-50/50 text-sm font-bold text-gray-700 shadow-inner" 
-                  placeholder="e.g. Ali Ahmed"
                   required
-                />
+                >
+                  <option value="" disabled>-- Select a Store --</option>
+                  {stores.map(store => (
+                    <option key={store._id} value={store.name}>{store.name}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Status Tier</label>
-                  <select name="status" value={currentCustomer.status} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-4 bg-gray-50/50 text-sm font-bold outline-none focus:ring-2 focus:ring-[#13786E]">
-                    <option value="Silver">Silver</option>
-                    <option value="Gold">Gold</option>
-                    <option value="Platinum">Platinum</option>
-                    <option value="defaulter">Defaulter (Warning)</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Total Spent (Rs)</label>
-                  <input type="number" name="totalSpent" value={currentCustomer.totalSpent} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-4 bg-gray-50/50 text-sm font-black text-[#13786E] outline-none shadow-inner" required />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact No</label>
-                  <input type="text" name="contact" value={currentCustomer.contact} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-4 bg-gray-50/50 text-sm font-bold outline-none shadow-inner" placeholder="0300-XXXXXXX" required />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Last Purchase Date</label>
-                  <input type="date" name="lastVisit" value={currentCustomer.lastVisit} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-4 bg-gray-50/50 text-sm font-bold outline-none shadow-inner" />
-                </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Status Tier</label>
+                <select name="status" value={currentCustomer.status} onChange={handleChange} className="w-full border border-gray-200 rounded-2xl px-5 py-4 bg-gray-50/50 text-sm font-bold outline-none focus:ring-2 focus:ring-[#13786E]">
+                  <option value="Silver">Silver</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
+                  <option value="defaulter">Defaulter (Warning)</option>
+                </select>
               </div>
 
               <div className="pt-6 flex flex-col-reverse sm:flex-row gap-3">

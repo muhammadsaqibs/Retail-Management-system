@@ -19,14 +19,17 @@ const Store = mongoose.models.Store || mongoose.model("Store", new mongoose.Sche
  
 // --- NEW: STORE LOGIN API ---
 router.post("/login", async (req, res) => {
-  const { name, password } = req.body;
+  const { name, identifier, password } = req.body;
+  const loginId = identifier || name;
   
   try {
-    // 1. Check if store exists by Registered Name
-    const store = await Store.findOne({ name: name });
+    // 1. Check if store exists by Email (loginId) or Registered Name
+    const store = await Store.findOne({ 
+      $or: [{ email: loginId }, { name: loginId }]
+    });
     
     if (!store) {
-      return res.status(404).json({ success: false, message: "Store not found in database!" });
+      return res.status(404).json({ success: false, message: "Store not found with this ID/Name!" });
     }
 
     // 2. Check Password
