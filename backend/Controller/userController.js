@@ -77,7 +77,7 @@ export const loginUser = async (req, res) => {
 
     const user = await User.findOne({ 
       $or: [{ email: identifier }, { username: identifier }] 
-    });
+    }).select("+password");
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -95,7 +95,10 @@ export const loginUser = async (req, res) => {
       sameSite: "none",
     });
 
-    res.status(200).json({ success: true, message: "Login successful", user, token });
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.status(200).json({ success: true, message: "Login successful", user: userResponse, token });
   } catch (err) {
     console.error("Login error:", err.message);
     return res.status(500).json({ success: false, message: err.message });
