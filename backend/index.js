@@ -24,7 +24,7 @@ const app = express();
 
 app.use(cookieParser());
 app.use(cors({
-  origin : "https://retail-management-system-imno.vercel.app",
+  origin : "https://dashboardretailmanagement.vercel.app",
   credentials : true
 }))
 // app.use(cors({
