@@ -59,19 +59,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error: " + err.message });
 });
 
-// >>> RAILWAY KE LIYE YEH PORT SETTING LAZMI HAI <<<
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  await connectMongo();
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
-};
+// Connect to DB for Serverless environment (Vercel)
+if (process.env.VERCEL) {
+  connectMongo().catch(console.error);
+} else {
+  // Railway or Local environment
+  const startServer = async () => {
+    await connectMongo();
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  };
 
-startServer().catch((error) => {
-  console.error("Failed to start server:", error.message);
-  process.exit(1);
-});
+  startServer().catch((error) => {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  });
+}
 
 export default app;
