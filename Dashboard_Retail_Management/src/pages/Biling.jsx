@@ -86,8 +86,13 @@ const Billing = () => {
       if (print) {
         setTimeout(() => {
           window.print();
+        }, 100);
+        
+        const afterPrint = () => {
           setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
-        }, 300);
+          window.removeEventListener("afterprint", afterPrint);
+        };
+        window.addEventListener("afterprint", afterPrint);
       } else {
         setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
       }

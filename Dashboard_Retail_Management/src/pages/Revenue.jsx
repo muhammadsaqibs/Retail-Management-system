@@ -34,7 +34,25 @@ const Revenue = () => {
     setIsLoading(true);
     try {
       const res = await axiosInstance.get(`/revenue/stats?month=${selectedMonth}`);
-      setStats(res.data);
+      let newStats = res.data;
+
+      const storeUser = JSON.parse(localStorage.getItem("activeStore"));
+      if (storeUser) {
+        const localOrders = JSON.parse(localStorage.getItem("apex_orders_list") || "[]");
+        const completedOrders = localOrders.filter(o => o.status === "Completed" || o.status === "Delivered");
+        
+        let localRevenue = 0;
+        completedOrders.forEach(ord => localRevenue += Number(ord.amount || 0));
+
+        newStats = {
+          ...newStats,
+          totalRevenue: localRevenue,
+          netProfit: localRevenue * 0.4, // Fixed 40% margin estimate for POS
+          avgOrderValue: completedOrders.length > 0 ? (localRevenue / completedOrders.length).toFixed(2) : 0
+        };
+      }
+
+      setStats(newStats);
     } catch (error) {
       console.error("Analytics Fetch Error");
       toast.error("Failed to load financial records");

@@ -40,10 +40,16 @@ const Dashboard = () => {
         });
         let stats = res.data.stats;
         
-        // Override orders for store user since they save to localStorage
+        // Override orders and revenue for store user since they save to localStorage
         if (role === "store") {
           const localOrders = JSON.parse(localStorage.getItem("apex_orders_list") || "[]");
-          stats.totalOrders = localOrders.length;
+          const completedOrders = localOrders.filter(o => o.status === "Completed" || o.status === "Delivered");
+          
+          let localRevenue = 0;
+          completedOrders.forEach(ord => localRevenue += Number(ord.amount || 0));
+
+          stats.totalOrders = completedOrders.length;
+          stats.totalRevenue = localRevenue;
         }
 
         setDbStats(stats);
