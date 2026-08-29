@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { 
 import { Plus, Trash2, Search, User, ShoppingBag, DollarSign, Calendar, MapPin, Phone, X, RefreshCw, ClipboardList, Loader2, Printer } from "lucide-react";
 import { useMutation, useQueries, useQueryClient, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
@@ -169,7 +168,14 @@ const DebtPage = () => {
                       <span className="text-[9px] text-[#13786E] font-black uppercase italic">Deadline: {d.expectedPayDate ? new Date(d.expectedPayDate).toLocaleDateString() : "No Date Set"}</span>
                     </div>
                   </td>
-                  <td className="px-6 md:px-8 py-5 text-center">
+                  <td className="px-6 md:px-8 py-5 text-center flex justify-center gap-2">
+                      <button 
+                        onClick={() => handleDelete(d._id)} 
+                        className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-all shadow-sm"
+                        title="Delete Record"
+                      >
+                        <Trash2 size={16}/>
+                      </button>
                       <button 
                         onClick={() => setSelectedDebtForPrint(d)}
                         className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-100 transition-all shadow-sm"
@@ -177,7 +183,6 @@ const DebtPage = () => {
                       >
                         <Printer size={16}/>
                       </button>
-                    </div>
                   </td>
                 </tr>
               ))}

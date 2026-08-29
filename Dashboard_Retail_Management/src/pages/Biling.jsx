@@ -264,7 +264,6 @@ const Billing = () => {
                     <Printer size={18}/> Save & Print
                 </button>
             </div>
-            </div>
           </div>
         </div>
       </div>
