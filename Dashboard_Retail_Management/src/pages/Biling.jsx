@@ -310,9 +310,10 @@ const Billing = () => {
            </div>
         </div>
 
-        <div className="text-center text-[10px] font-bold text-black border-t border-dashed border-gray-400 pt-4">
-           <p>Thank you for shopping with us!</p>
-           <p>Software by Apexiums</p>
+        <div className="text-center text-[10px] font-bold text-black border-t border-dashed border-gray-400 pt-4 mt-4">
+           <p className="mb-2 italic">Thank you for shopping with us!</p>
+           <p className="font-black uppercase text-[9px] tracking-widest">Software Developed By Apexiums Technologies</p>
+           <p className="font-black text-[9px] tracking-widest mt-1">03405542097</p>
         </div>
       </div>
 

@@ -238,9 +238,15 @@ const DebtPage = () => {
                   </table>
                </div>
 
-               <div className="flex justify-between items-center pt-6">
+               <div className="flex justify-between items-center pt-6 mb-6">
                   <p className="text-sm font-black uppercase text-gray-400">Total Udhaar</p>
                   <p className="text-2xl font-black text-red-600">Rs. {Number(selectedDebtForPrint.amount).toLocaleString()}</p>
+               </div>
+
+               <div className="text-center text-[10px] font-bold text-gray-800 border-t border-dashed border-gray-200 pt-6 mt-2 hidden print:block">
+                  <p className="mb-2 italic text-gray-500">Thank you for your business!</p>
+                  <p className="font-black uppercase text-[9px] tracking-widest text-[#13786E]">Software Developed By Apexiums Technologies</p>
+                  <p className="font-black text-[9px] tracking-widest mt-1 text-gray-500">03405542097</p>
                </div>
 
                <div className="flex flex-col sm:flex-row gap-3 pt-8 print:hidden">

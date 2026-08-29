@@ -253,6 +253,11 @@ const ProductPage = () => {
                <p className="text-[9px] font-black text-gray-400 uppercase mb-2 text-center truncate w-[200px]">Rs. {Number(barcodePrintProduct.Price).toLocaleString()} | {categoriesList.find(c => c._id === barcodePrintProduct.categoryId)?.categoryName || "Item"}</p>
                
                <Barcode value={barcodePrintProduct.Barcode || "000000000000"} width={1.5} height={40} fontSize={10} displayValue={true} />
+               
+               <div className="text-center text-[8px] font-bold text-gray-800 border-t border-dashed border-gray-200 pt-2 mt-3 hidden print:block w-full">
+                  <p className="font-black uppercase tracking-widest text-[#13786E]">Apexiums Technologies</p>
+                  <p className="font-black tracking-widest mt-0.5 text-gray-500">03405542097</p>
+               </div>
             </div>
 
             <div className="p-6 flex gap-3 print:hidden">
