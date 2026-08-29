@@ -245,7 +245,7 @@ const ProductPage = () => {
             </div>
 
             {/* Print Area */}
-            <div className="p-4 bg-white border-y border-dashed border-gray-200 text-center flex flex-col items-center justify-center">
+            <div id="print-barcode-area" className="p-4 bg-white border-y border-dashed border-gray-200 text-center flex flex-col items-center justify-center">
                <p className="font-black text-[11px] uppercase text-gray-800 mb-1 leading-tight w-[200px] truncate">{barcodePrintProduct.Name}</p>
                <p className="text-[9px] font-black text-gray-400 uppercase mb-2 text-center truncate w-[200px]">Rs. {Number(barcodePrintProduct.Price).toLocaleString()} | {categoriesList.find(c => c._id === barcodePrintProduct.categoryId)?.categoryName || "Item"}</p>
                
@@ -266,14 +266,21 @@ const ProductPage = () => {
       )}
 
       <style jsx>{`
-        @media print { 
-          .lg\\:ml-64, button, .mt-14, .mb-8, .text-center.lg\\:text-left { display: none !important; } 
-          body { background: white !important; padding: 0 !important; }
-          .min-h-screen { min-height: auto !important; padding: 0 !important; margin: 0 !important; }
-          .fixed { position: static !important; background: white !important; padding: 0 !important; }
-          .max-w-sm { max-width: 100% !important; border: none !important; box-shadow: none !important; }
-          .bg-\\[\\#F8FAFC\\] { background: white !important; }
-          table { display: none !important; } /* Hide the table in background */
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #print-barcode-area, #print-barcode-area * {
+            visibility: visible;
+          }
+          #print-barcode-area {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            width: 100%;
+            border: none !important;
+          }
         }
       `}</style>
     </div>
