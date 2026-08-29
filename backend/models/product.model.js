@@ -11,6 +11,7 @@ const productSchema = new mongoose.Schema({
   Stock: { type: String, default: "0" },
   Description: { type: String, default: "" },
   Discount: { type: String, default: "0" },
+  Barcode: { type: String, default: "" }
 }, { timestamps: { createdAt: true, updatedAt: false } });
 
 export const Product = mongoose.models.Product || mongoose.model("Product", productSchema);

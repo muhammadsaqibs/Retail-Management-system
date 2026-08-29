@@ -7,13 +7,13 @@ import mongoose from "mongoose";
 export const createProduct = async (req, res) => {
   try {
     // 1. categoryId ko bhi nikaalein req.body se
-    const { Name, Price, brandName, companyPrice , categoryId, Stock, Discount, Description } = req.body;
+    const { Name, Price, brandName, companyPrice , categoryId, Stock, Discount, Description, Barcode } = req.body;
 
     // Validation
-    if (!Name || Price == null || !brandName || !categoryId) {
+    if (!Name || Price == null || !categoryId) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields (Name, Price, Brand, or Category)",
+        message: "Missing required fields (Name, Price, or Category)",
       });
     }
 
@@ -22,9 +22,10 @@ export const createProduct = async (req, res) => {
       return res.status(409).json({ message: "Product already exists" });
     }
 
-    const fetchExistingBrand = await Brand.findOne({ brandName });
-    if (!fetchExistingBrand) return res.status(309).send("Cannot Fetch brand");
-
+    let fetchExistingBrand = null;
+    if (brandName) {
+      fetchExistingBrand = await Brand.findOne({ brandName });
+    }
     let imageUrl = "";
     if (req.file) {
       try {
@@ -43,13 +44,14 @@ export const createProduct = async (req, res) => {
     const product = await createproduct({
       Name,
       Price,
-      brandId: fetchExistingBrand._id,
-      categoryId: categoryId, // Pass categoryId here
+      brandId: fetchExistingBrand ? fetchExistingBrand._id : null,
+      categoryId: categoryId, 
       Stock,
       companyPrice,
-      brandName: fetchExistingBrand.brandName,
+      brandName: fetchExistingBrand ? fetchExistingBrand.brandName : "",
       Discount,
       Description,
+      Barcode,
       Image: imageUrl || "",
     });
 

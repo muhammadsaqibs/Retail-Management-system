@@ -5,9 +5,11 @@ export const createproduct = async({
         Name,
         Price,
         brandId,
+        categoryId,
         Stock,
         Discount,
         Description,
+        Barcode,
         Image,
         companyPrice,
         brandName
@@ -17,11 +19,13 @@ export const createproduct = async({
             Name,
             Price,
             brandId,
+            categoryId,
             brandName,
             Stock,
             companyPrice,
             Discount,
             Description,
+            Barcode,
             Image
         })
         console.log("PRoduct created Successfull")
