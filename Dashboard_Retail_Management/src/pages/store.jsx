@@ -41,14 +41,11 @@ const StoreManagement = () => {
     fetchStores();
   }, []);
 
-  const toggleStatus = async (id, currentStatus) => {
-    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+  const updateStatus = async (id, newStatus) => {
     try {
       await axiosInstance.put(`/stores/update/${id}`, { status: newStatus });
       setStores(stores.map(s => s._id === id ? { ...s, status: newStatus } : s));
-      
-      if(newStatus === "Active") toast.success("Store Activated");
-      else toast.warn("Store Inactivated");
+      toast.success(`Store marked as ${newStatus}`);
     } catch (error) {
       toast.error("Failed to update status");
     }
@@ -183,23 +180,21 @@ const StoreManagement = () => {
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <div className="flex flex-col items-center gap-1.5">
-                        <button
-                          onClick={() => toggleStatus(store._id, store.status)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none shadow-inner ${
-                            store.status === "Active" ? "bg-[#13786E]" : "bg-gray-300"
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 ${
-                              store.status === "Active" ? "translate-x-6" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${store.status === 'Active' ? 'text-[#13786E]' : 'text-gray-400'}`}>
-                          {store.status}
-                        </span>
-                      </div>
+                      <select
+                        value={store.status || "Active"}
+                        onChange={(e) => updateStatus(store._id, e.target.value)}
+                        className={`text-[9px] font-black uppercase tracking-widest p-2 rounded-xl outline-none shadow-sm cursor-pointer border ${
+                          store.status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' :
+                          store.status === 'Defaulter' ? 'bg-red-50 text-red-700 border-red-200' :
+                          store.status === 'Warning' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                          'bg-gray-100 text-gray-500 border-gray-200'
+                        }`}
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Defaulter">Defaulter</option>
+                        <option value="Warning">Warning</option>
+                      </select>
                     </td>
 
                     <td className="px-6 py-4 text-center">

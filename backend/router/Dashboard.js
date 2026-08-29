@@ -82,16 +82,23 @@ router.get("/stats", async (req, res) => {
 
       const totalOrders = await Order.countDocuments();
 
+      let storeStatus = "Active";
+      if (storeId && mongoose.models.Store) {
+         const store = await mongoose.models.Store.findById(storeId);
+         if (store) storeStatus = store.status || "Active";
+      }
+
       return res.status(200).json({
         success: true,
         stats: {
+          storeStatus: storeStatus,
           totalRevenue: revenue,
           netProfit: revenue - cost,
           totalDebt: debtData[0]?.total || 0,
           totalProducts: totalProducts,
           totalAgencies: totalAgencies,
           totalOrders: totalOrders, 
-          totalWholesalers: 0, // Placeholder until wholesaler logic is implemented
+          totalWholesalers: 0, 
           totalExpense: 0, 
           totalStaff: 0    
         }
