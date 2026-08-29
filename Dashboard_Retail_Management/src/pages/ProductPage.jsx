@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from "react";
-import { 
-  Plus, Trash2, Search, Package, Tag, Bookmark, X, DollarSign,
-  Layers, Hash, RefreshCw, Briefcase, Loader2 
-} from "lucide-react";
+import { Plus, Trash2, Search, Package, Tag, Bookmark, X, DollarSign, Layers, Hash, RefreshCw, Briefcase, Loader2, Printer } from "lucide-react";
 import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 import { toast } from "react-toastify";
+import Barcode from "react-barcode";
 
 const ProductPage = () => {
   const [activeForm, setActiveForm] = useState(null);
   const [searchItem, setSearchItem] = useState("");
+  const [barcodePrintProduct, setBarcodePrintProduct] = useState(null);
   const queryClient = useQueryClient();
 
   // 1. DATA FETCHING
@@ -48,9 +47,10 @@ const ProductPage = () => {
   // 3. ADD PRODUCT MUTATION
   const createProduct = useMutation({
     mutationFn: (payload) => axiosInstance.post('/products/add', payload),
-    onSuccess: () => { 
+    onSuccess: (data, variables) => { 
       queryClient.invalidateQueries(['Products']); 
       toast.success("Product Saved Successfully!"); 
+      setBarcodePrintProduct(variables);
       setActiveForm(null); 
       resetForm(); 
     },
@@ -64,7 +64,13 @@ const ProductPage = () => {
     if(!productForm.Name || !productForm.Price || !productForm.categoryId || !productForm.companyPrice) {
       return toast.error("Required: Name, Company Price, Selling Price, and Category");
     }
-    createProduct.mutate(productForm);
+
+    const finalForm = { ...productForm };
+    if (!finalForm.Barcode) {
+      finalForm.Barcode = Math.floor(100000000000 + Math.random() * 900000000000).toString(); 
+    }
+
+    createProduct.mutate(finalForm);
   };
 
   const handleDelete = async (id) => {
@@ -140,7 +146,6 @@ const ProductPage = () => {
               <FormInput label="Selling Price *" type="number" icon={<DollarSign size={14}/>} value={productForm.Price} onChange={(e)=>setProductForm({...productForm, Price: e.target.value})} />
               <FormInput label="Stock Amount" type="number" icon={<Hash size={14}/>} value={productForm.Stock} onChange={(e)=>setProductForm({...productForm, Stock: e.target.value})} />
               <FormInput label="Discount (%)" type="number" icon={<Tag size={14}/>} value={productForm.Discount} onChange={(e)=>setProductForm({...productForm, Discount: e.target.value})} />
-              <FormInput label="Barcode" type="text" icon={<Hash size={14}/>} value={productForm.Barcode || ""} onChange={(e)=>setProductForm({...productForm, Barcode: e.target.value})} />
               
               <div className="sm:col-span-2 lg:col-span-1">
                  <FormInput label="Description" icon={<Layers size={14}/>} value={productForm.Description} onChange={(e)=>setProductForm({...productForm, Description: e.target.value})} />
@@ -210,11 +215,11 @@ const ProductPage = () => {
                   <td className="px-6 md:px-8 py-5 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button 
-                        onClick={() => window.print()} 
-                        className="p-2.5 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors shadow-sm"
+                        onClick={() => setBarcodePrintProduct(p)} 
+                        className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-100 transition-colors shadow-sm"
                         title="Print Barcode"
                       >
-                        Print Barcode
+                        <Printer size={16}/>
                       </button>
                       <button 
                         onClick={() => handleDelete(p._id)} 
@@ -231,6 +236,44 @@ const ProductPage = () => {
           </table>
         </div>
       </div>
+
+      {/* BARCODE PRINT MODAL */}
+      {barcodePrintProduct && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl print:shadow-none print:w-auto print:rounded-none">
+            
+            <div className="p-6 text-center print:hidden">
+               <h2 className="text-xl font-black uppercase text-[#13786E]">Product Added!</h2>
+               <p className="text-xs font-bold text-gray-500 uppercase mt-1 mb-4">Would you like to print the barcode now?</p>
+            </div>
+
+            {/* Print Area */}
+            <div className="p-4 bg-white border-y border-dashed border-gray-200 text-center flex flex-col items-center justify-center">
+               <p className="font-black text-[11px] uppercase text-gray-800 mb-1 leading-tight w-[200px] truncate">{barcodePrintProduct.Name}</p>
+               <p className="text-[9px] font-black text-gray-400 uppercase mb-2 text-center truncate w-[200px]">Rs. {Number(barcodePrintProduct.Price).toLocaleString()} | {categoriesList.find(c => c._id === barcodePrintProduct.categoryId)?.categoryName || "Item"}</p>
+               
+               <Barcode value={barcodePrintProduct.Barcode || "000000000000"} width={1.5} height={40} fontSize={10} displayValue={true} />
+            </div>
+
+            <div className="p-6 flex gap-3 print:hidden">
+               <button onClick={() => setBarcodePrintProduct(null)} className="flex-1 py-3 border border-gray-200 rounded-xl font-black text-gray-500 uppercase text-[10px] hover:bg-gray-50 transition-all">Close</button>
+               <button onClick={() => { setTimeout(() => window.print(), 100); }} className="flex-1 py-3 bg-[#13786E] text-white rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-xl hover:bg-teal-700 transition-all"><Printer size={16}/> Print Barcode</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @media print { 
+          .lg\\:ml-64, button, .mt-14, .mb-8, .text-center.lg\\:text-left { display: none !important; } 
+          body { background: white !important; padding: 0 !important; }
+          .min-h-screen { min-height: auto !important; padding: 0 !important; margin: 0 !important; }
+          .fixed { position: static !important; background: white !important; padding: 0 !important; }
+          .max-w-sm { max-width: 100% !important; border: none !important; box-shadow: none !important; }
+          .bg-\\[\\#F8FAFC\\] { background: white !important; }
+          table { display: none !important; } /* Hide the table in background */
+        }
+      `}</style>
     </div>
   );
 };
