@@ -84,23 +84,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* STATUS BADGE - TOP CENTER */}
-        {role === "store" && !isLoading && dbStats?.storeStatus && (
-          <div className="flex-1 flex justify-center">
-            <div className={`px-6 py-2 rounded-2xl border-2 flex items-center gap-2 shadow-sm ${
-              dbStats.storeStatus === 'Active' ? 'bg-green-50 border-green-200 text-green-700' :
-              dbStats.storeStatus === 'Defaulter' ? 'bg-red-50 border-red-200 text-red-700 animate-pulse' :
-              dbStats.storeStatus === 'Warning' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-              'bg-gray-100 border-gray-200 text-gray-600'
-            }`}>
-              <ShieldCheck size={18} />
-              <div className="flex flex-col text-left">
-                 <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Store Status</span>
-                 <span className="text-sm font-black uppercase tracking-widest">{dbStats.storeStatus}</span>
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* DYNAMIC MONTH SELECTOR: Full width on mobile */}
         <div className='bg-white p-1 rounded-2xl border border-gray-200 flex shadow-sm items-center px-4 w-full md:w-auto hover:border-[#13786E] transition-all'>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Bell, User, Settings, LogOut, ChevronDown, CheckCheck, Menu, Search } from "lucide-react";
+import { Bell, User, Settings, LogOut, ChevronDown, CheckCheck, Menu, Search, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 
@@ -12,6 +12,10 @@ const Header = ({ setMobileOpen }) => {
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
+  const storeUserStr = localStorage.getItem("activeStore");
+  const storeUser = storeUserStr ? JSON.parse(storeUserStr) : null;
+  const role = storeUser ? "store" : "admin";
+
   const { data: notificationData = [] } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -20,6 +24,29 @@ const Header = ({ setMobileOpen }) => {
     },
     staleTime: 1000 * 60 * 5 
   });
+
+  const { data: storeStatus = "Active" } = useQuery({
+    queryKey: ["headerStoreStatus", storeUser?._id],
+    queryFn: async () => {
+      if (!storeUser) return "Active";
+      const res = await axiosInstance.get("/customers/all");
+      const customers = res.data?.data || res.data || [];
+      const myCustomer = customers.find(c => c.name === storeUser.name);
+      return myCustomer?.status || "Active";
+    },
+    enabled: role === "store"
+  });
+
+  const getStatusStyle = (status) => {
+    const s = status?.toLowerCase();
+    switch (s) {
+      case "platinum": return "bg-indigo-50 border-indigo-200 text-indigo-700";
+      case "defaulter": return "bg-red-50 border-red-200 text-red-700 animate-pulse";
+      case "gold": return "bg-orange-50 border-orange-200 text-orange-700";
+      case "silver": return "bg-slate-50 border-slate-200 text-slate-700";
+      default: return "bg-green-50 border-green-200 text-green-700"; // Active
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -48,6 +75,19 @@ const Header = ({ setMobileOpen }) => {
             Retail / <span className="text-[#13786E]">Terminal Portal</span>
           </h2>
         </div>
+      </div>
+
+      {/* Center Section: Status Badge (For Stores Only) */}
+      <div className="flex-1 flex justify-center hidden sm:flex">
+         {role === "store" && (
+           <div className={`px-4 py-1.5 rounded-full border-2 flex items-center gap-1.5 shadow-sm ${getStatusStyle(storeStatus)}`}>
+              <Shield size={14} className="opacity-70" />
+              <div className="flex flex-col leading-none">
+                <span className="text-[7px] font-black uppercase opacity-60 tracking-widest">Store Status</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">{storeStatus}</span>
+              </div>
+           </div>
+         )}
       </div>
 
       {/* Right Section: Actions */}
