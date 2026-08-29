@@ -11,6 +11,9 @@ import { toast } from "react-toastify";
 
 const AllUsers = () => {
   const [searchItem, setSearchItem] = useState("");
+  const [permissionModalOpen, setPermissionModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState("");
   const queryClient = useQueryClient();
 
   // 1. Fetch All Users
@@ -45,9 +48,26 @@ const AllUsers = () => {
     });
   };
 
+  // 3. Update Role Mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: (data) => axiosInstance.put(`/auth/update-role/${data.id}`, { role: data.role }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['all-users']);
+      toast.success("User permissions updated successfully!");
+      setPermissionModalOpen(false);
+    },
+    onError: () => toast.error("Failed to update permissions")
+  });
+
+  const handleUpdateRole = (e) => {
+    e.preventDefault();
+    if (!selectedRole || !selectedUser) return;
+    updateRoleMutation.mutate({ id: selectedUser._id, role: selectedRole });
+  };
+
   // Filter Search
   const filteredUsers = Array.isArray(usersData) ? usersData.filter(user => 
-    (user.Name || "").toLowerCase().includes(searchItem.toLowerCase()) ||
+    (user.username || "").toLowerCase().includes(searchItem.toLowerCase()) ||
     (user.email || "").toLowerCase().includes(searchItem.toLowerCase())
   ) : [];
 
@@ -123,10 +143,10 @@ const AllUsers = () => {
                     <td className="px-6 md:px-8 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-[#13786E] font-black border border-teal-200 shadow-inner flex-shrink-0">
-                          {user.Name ? user.Name.charAt(0).toUpperCase() : <UserCircle size={20}/>}
+                          {user.username ? user.username.charAt(0).toUpperCase() : <UserCircle size={20}/>}
                         </div>
                         <div className="overflow-hidden">
-                          <p className="font-bold text-gray-800 leading-none mb-1 truncate">{user.Name || "System Operator"}</p>
+                          <p className="font-bold text-gray-800 leading-none mb-1 truncate">{user.username || "System Operator"}</p>
                           <p className="text-xs text-gray-400 flex items-center gap-1 font-bold italic truncate">
                             <Mail size={12} className="text-gray-300"/> {user.email}
                           </p>
@@ -135,7 +155,7 @@ const AllUsers = () => {
                     </td>
                     <td className="px-6 md:px-8 py-4">
                       <span className="text-[10px] font-black text-gray-600 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200 uppercase tracking-tighter">
-                        {user.role || "Operator"}
+                        {user.role || "Office Boy"}
                       </span>
                     </td>
                     <td className="px-6 md:px-8 py-4">
@@ -156,7 +176,15 @@ const AllUsers = () => {
                     </td>
                     <td className="px-6 md:px-8 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 shadow-sm transition-all" title="Modify Permissions">
+                        <button 
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setSelectedRole(user.role || "Office Boy");
+                            setPermissionModalOpen(true);
+                          }}
+                          className="p-2.5 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 shadow-sm transition-all" 
+                          title="Modify Permissions"
+                        >
                           <Edit size={16} />
                         </button>
                         <button 
@@ -191,6 +219,50 @@ const AllUsers = () => {
             © 2024 Apexiums Cloud Security • Protocol V2.1
          </p>
       </div>
+
+      {/* --- MODIFY PERMISSIONS MODAL --- */}
+      {permissionModalOpen && selectedUser && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm shadow-2xl animate-in zoom-in duration-200 overflow-hidden">
+            <div className="bg-[#13786E] p-6 flex justify-between items-center text-white">
+              <h2 className="text-lg font-black uppercase tracking-widest flex items-center gap-2">
+                <ShieldCheck size={20} /> Update Permissions
+              </h2>
+              <button onClick={() => setPermissionModalOpen(false)} className="hover:rotate-90 transition-transform"><X size={24} /></button>
+            </div>
+            
+            <form onSubmit={handleUpdateRole} className="p-6 space-y-6">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">User Account</p>
+                <p className="font-bold text-gray-800 text-sm bg-gray-50 p-3 rounded-xl border border-gray-100">{selectedUser.username || "Unknown"}</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assign Role / Privilege</label>
+                <select 
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full border border-gray-200 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-[#13786E] outline-none text-sm font-bold text-gray-700 shadow-inner bg-gray-50"
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Office Boy">Office Boy</option>
+                </select>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <button 
+                  type="submit" 
+                  disabled={updateRoleMutation.isPending}
+                  className="w-full py-4 bg-[#13786E] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-teal-700 transition-all flex items-center justify-center gap-2"
+                >
+                  {updateRoleMutation.isPending ? <Loader2 className="animate-spin" size={16}/> : "Confirm New Permissions"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   DollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, 
   Calendar, Loader2, Activity, BarChart3
@@ -13,14 +13,21 @@ import { toast } from 'react-toastify';
 const Revenue = () => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState("August 2026");
-
-  // --- 1. MONTHS LIST ---
-  const monthsList = [
-    "August 2026", "September 2026", "October 2026", "November 2026", "December 2026",
-    "January 2027", "February 2027", "March 2027", "April 2027", "May 2027", 
-    "June 2027", "July 2027", "August 2027"
-  ];
+  // --- 1. DYNAMIC MONTHS LIST (Current month on top) ---
+  const generateMonths = () => {
+    const months = [];
+    const date = new Date();
+    for (let i = 0; i < 24; i++) {
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      const year = date.getFullYear();
+      months.push(`${monthName} ${year}`);
+      date.setMonth(date.getMonth() - 1);
+    }
+    return months;
+  };
+  
+  const monthsList = useMemo(() => generateMonths(), []);
+  const [selectedMonth, setSelectedMonth] = useState(monthsList[0]);
 
   // --- 2. FETCH ANALYTICS ---
   const fetchAnalytics = async () => {

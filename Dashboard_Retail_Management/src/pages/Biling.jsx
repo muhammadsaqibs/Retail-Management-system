@@ -21,53 +21,85 @@ const Billing = () => {
   
   const scannerRef = useRef(null);
 
-  // Dummy products list (Replace with actual backend search later)
-  const products = [
-    { id: 1, barcode: "123456", name: "Premium Basmati Rice 5kg", price: 1250 },
-    { id: 2, barcode: "987654", name: "Cooking Oil 5L", price: 2450 },
-    { id: 3, barcode: "112233", name: "Dairy Milk Chocolate", price: 180 },
-  ];
+  // Fetch actual products
+  const { data: productsData } = useQuery({ 
+    queryKey: ['Products'], 
+    queryFn: async () => (await axiosInstance.get('/products/all')).data 
+  });
+  const products = productsData?.data || productsData || [];
 
-  // --- SCANNER START/STOP LOGIC ---
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const barcodeInputRef = useRef(null);
+
+  // Focus scanner input when scanner is opened
   useEffect(() => {
-    if (isScannerOpen) {
-      scannerRef.current = new Html5Qrcode("billing-scanner");
-      scannerRef.current.start(
-        { facingMode: "environment" }, // Mobile back camera focus
-        { fps: 10, qrbox: { width: 250, height: 180 } },
-        (decodedText) => {
-          const found = products.find(p => p.barcode === decodedText);
-          if (found) {
-            setCart(prev => {
-              const existing = prev.find(item => item.id === found.id);
-              if (existing) {
-                return prev.map(item => item.id === found.id ? { ...item, qty: item.qty + 1 } : item);
-              }
-              return [...prev, { ...found, qty: 1 }];
-            });
-            toast.success(`${found.name} Added!`);
-          }
-        },
-        (err) => {}
-      ).catch(err => {
-        console.error("Scanner Error:", err);
-        setIsScannerOpen(false);
-      });
+    if (isScannerOpen && barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
     }
-
-    return () => {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().then(() => scannerRef.current.clear());
-      }
-    };
   }, [isScannerOpen]);
 
-  const subtotal = useMemo(() => cart.reduce((acc, item) => acc + (item.price * item.qty), 0), [cart]);
+  const handleBarcodeSubmit = (e) => {
+    e.preventDefault();
+    if (!barcodeInput) return;
+    const found = products.find(p => p.Barcode === barcodeInput || p.Name.toLowerCase() === barcodeInput.toLowerCase());
+    if (found) {
+      addToCart(found);
+      setBarcodeInput("");
+      toast.success(`${found.Name} Added!`);
+    } else {
+      toast.error("Product not found!");
+      setBarcodeInput("");
+    }
+  };
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const existing = prev.find(item => item._id === product._id);
+      if (existing) {
+        return prev.map(item => item._id === product._id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  const searchResults = useMemo(() => {
+    if (!searchTerm) return [];
+    return products.filter(p => p.Name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [searchTerm, products]);
+
+  const saveOrder = async (print = false) => {
+    if (cart.length === 0) return toast.error("Cart is empty");
+    try {
+      const newOrder = {
+        id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+        date: new Date().toISOString(),
+        customer: "Walk-in Customer",
+        amount: grandTotal,
+        status: "Completed",
+        items: cart.map(c => ({ name: c.Name, qty: c.qty, price: c.Price }))
+      };
+      
+      const savedOrders = JSON.parse(localStorage.getItem("apex_orders_list") || "[]");
+      localStorage.setItem("apex_orders_list", JSON.stringify([newOrder, ...savedOrders]));
+      
+      toast.success("Order saved successfully");
+      if (print) {
+        setTimeout(() => window.print(), 500);
+      }
+      setCart([]); setTax(0); setDiscount(0); setSearchTerm("");
+    } catch (err) {
+      toast.error("Failed to save order");
+    }
+  };
+
+  const subtotal = useMemo(() => cart.reduce((acc, item) => acc + (Number(item.Price || 0) * item.qty), 0), [cart]);
   const grandTotal = subtotal + Number(tax) - Number(discount);
 
   return (
-    <div className="flex-1 lg:ml-64 ml-0 min-h-screen bg-gray-50 p-4 md:p-6 mt-14 font-sans text-left overflow-x-hidden">
+    <div className="flex-1 lg:ml-64 ml-0 min-h-screen bg-gray-50 p-4 md:p-6 mt-14 font-sans text-left overflow-x-hidden print:m-0 print:p-0 print:bg-white print:min-h-0">
       
+      {/* MAIN POS INTERFACE - HIDDEN ON PRINT */}
+      <div className="no-print flex flex-col gap-6">
       {/* Header - Stack on very small devices */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
         <div className="text-center sm:text-left">
@@ -99,23 +131,53 @@ const Billing = () => {
           
           {/* RESPONSIVE SCANNER VIEWPORT */}
           {isScannerOpen && (
-            <div className="bg-gray-900 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden relative border-4 border-[#13786E] h-48 md:h-72 flex items-center justify-center animate-in zoom-in duration-300 shadow-2xl">
-               <div id="billing-scanner" className="w-full h-full"></div>
+            <div className="bg-gray-900 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden relative border-4 border-[#13786E] h-32 md:h-48 flex items-center justify-center animate-in zoom-in duration-300 shadow-2xl p-6">
+               <form onSubmit={handleBarcodeSubmit} className="w-full flex flex-col items-center gap-4">
+                 <ScanLine size={48} className="text-[#13786E]" />
+                 <input 
+                   ref={barcodeInputRef}
+                   type="text" 
+                   value={barcodeInput}
+                   onChange={(e) => setBarcodeInput(e.target.value)}
+                   placeholder="Scan Barcode Here..."
+                   className="w-full max-w-sm px-6 py-4 rounded-2xl bg-black/50 text-white border border-[#13786E] outline-none focus:ring-2 focus:ring-teal-400 font-bold text-center uppercase tracking-widest"
+                 />
+                 <button type="submit" className="hidden">Submit</button>
+               </form>
                <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                   <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-                  <span className="text-[9px] font-black text-white uppercase">Active</span>
+                  <span className="text-[9px] font-black text-white uppercase">Scanner Ready</span>
                </div>
             </div>
           )}
 
           {/* Search Box */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-              <Search className="text-gray-400" size={20} />
-              <input 
-                type="text" placeholder="Manual Item Search..." 
-                className="w-full outline-none font-bold text-sm bg-transparent"
-                value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="relative">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
+                <Search className="text-gray-400" size={20} />
+                <input 
+                  type="text" placeholder="Manual Item Search..." 
+                  className="w-full outline-none font-bold text-sm bg-transparent"
+                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
+            {searchTerm && searchResults.length > 0 && (
+              <div className="absolute z-50 w-full bg-white mt-2 rounded-2xl shadow-xl border border-gray-100 max-h-60 overflow-y-auto">
+                {searchResults.map(p => (
+                  <div 
+                    key={p._id} 
+                    onClick={() => { addToCart(p); setSearchTerm(""); }}
+                    className="p-4 hover:bg-teal-50 cursor-pointer border-b border-gray-50 flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-bold text-sm text-gray-800">{p.Name}</p>
+                      <p className="text-[10px] text-gray-400 font-black uppercase">Stock: {p.Stock}</p>
+                    </div>
+                    <p className="font-black text-[#13786E]">Rs. {Number(p.Price).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Cart Table Container */}
@@ -138,21 +200,21 @@ const Billing = () => {
                       </td>
                     </tr>
                   ) : cart.map((item) => (
-                    <tr key={item.id} className="hover:bg-teal-50/20 transition-colors">
+                    <tr key={item._id} className="hover:bg-teal-50/20 transition-colors">
                       <td className="px-6 py-4">
-                        <p className="font-bold text-gray-800 text-sm">{item.name}</p>
-                        <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">Unit: Rs.{item.price}</p>
+                        <p className="font-bold text-gray-800 text-sm">{item.Name}</p>
+                        <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">Unit: Rs.{Number(item.Price).toLocaleString()}</p>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-4">
-                          <button onClick={() => setCart(cart.map(i => i.id === item.id ? {...i, qty: Math.max(1, i.qty - 1)} : i))} className="p-1 text-gray-400 hover:text-red-500"><Minus size={14}/></button>
+                          <button onClick={() => setCart(cart.map(i => i._id === item._id ? {...i, qty: Math.max(1, i.qty - 1)} : i))} className="p-1 text-gray-400 hover:text-red-500"><Minus size={14}/></button>
                           <span className="font-black text-sm w-4 text-center">{item.qty}</span>
-                          <button onClick={() => setCart(cart.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i))} className="p-1 text-[#13786E] hover:scale-125"><Plus size={14}/></button>
+                          <button onClick={() => setCart(cart.map(i => i._id === item._id ? {...i, qty: i.qty + 1} : i))} className="p-1 text-[#13786E] hover:scale-125"><Plus size={14}/></button>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right font-black text-gray-800 text-sm">Rs. {(item.price * item.qty).toLocaleString()}</td>
+                      <td className="px-6 py-4 text-right font-black text-gray-800 text-sm">Rs. {(item.Price * item.qty).toLocaleString()}</td>
                       <td className="px-6 py-4 text-center">
-                        <button onClick={() => setCart(cart.filter(i => i.id !== item.id))} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
+                        <button onClick={() => setCart(cart.filter(i => i._id !== item._id))} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
                       </td>
                     </tr>
                   ))}
@@ -195,14 +257,63 @@ const Billing = () => {
             </div>
 
             <div className="flex flex-col gap-3 mt-8">
-                <button onClick={() => toast.info("Syncing Transaction...")} className="w-full bg-gray-800 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95">
-                    <Save size={18}/> Process Order
+                <button onClick={() => saveOrder(false)} className="w-full bg-gray-800 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg active:scale-95">
+                    <Save size={18}/> Save
                 </button>
-                <button onClick={() => window.print()} className="w-full bg-[#13786E] text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all hover:bg-[#0e5a52]">
-                    <Printer size={18}/> Print Receipt
+                <button onClick={() => saveOrder(true)} className="w-full bg-[#13786E] text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-all hover:bg-[#0e5a52]">
+                    <Printer size={18}/> Save & Print
                 </button>
             </div>
+            </div>
           </div>
+        </div>
+      </div>
+      </div> {/* END NO-PRINT WRAPPER */}
+
+      {/* --- PRINT ONLY RECEIPT TEMPLATE --- */}
+      <div className="hidden print-only print:block text-black bg-white p-2 max-w-[80mm] mx-auto font-sans">
+        <div className="text-center mb-4 border-b-2 border-black pb-4 text-black">
+           <h1 className="text-2xl font-black uppercase">{profile?.username || profile?.name || "RETAIL STORE"}</h1>
+           <p className="text-xs font-bold mt-1">{profile?.address || "Address Not Provided"}</p>
+           <p className="text-xs font-bold">Tel: {profile?.phone || profile?.contact || "N/A"}</p>
+        </div>
+        
+        <div className="flex justify-between text-xs font-bold mb-4 border-b border-black pb-2 text-black">
+           <span>Date: {new Date().toLocaleDateString()}</span>
+           <span>Time: {new Date().toLocaleTimeString()}</span>
+        </div>
+
+        <table className="w-full text-left text-xs font-bold mb-4 text-black">
+           <thead>
+              <tr className="border-b border-black">
+                 <th className="py-1">Item</th>
+                 <th className="py-1 text-center">Qty</th>
+                 <th className="py-1 text-right">Price</th>
+              </tr>
+           </thead>
+           <tbody>
+              {cart.map((item, idx) => (
+                <tr key={idx} className="border-b border-dashed border-gray-400">
+                   <td className="py-2 pr-2">{item.Name}</td>
+                   <td className="py-2 text-center">{item.qty}</td>
+                   <td className="py-2 text-right">{item.Price * item.qty}</td>
+                </tr>
+              ))}
+           </tbody>
+        </table>
+
+        <div className="flex flex-col gap-1 text-xs font-bold border-t-2 border-black pt-2 mb-6 text-black">
+           <div className="flex justify-between"><span>Subtotal:</span><span>Rs. {subtotal}</span></div>
+           <div className="flex justify-between"><span>GST/Tax:</span><span>Rs. {tax}</span></div>
+           <div className="flex justify-between"><span>Discount:</span><span>Rs. {discount}</span></div>
+           <div className="flex justify-between text-lg font-black mt-2 pt-2 border-t border-black">
+              <span>TOTAL:</span><span>Rs. {grandTotal}</span>
+           </div>
+        </div>
+
+        <div className="text-center text-[10px] font-bold text-black border-t border-dashed border-gray-400 pt-4">
+           <p>Thank you for shopping with us!</p>
+           <p>Software by Apexiums</p>
         </div>
       </div>
 
@@ -215,12 +326,11 @@ const Billing = () => {
         }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-        
         @media print { 
-          .lg\\:ml-64, button, .mt-14, .mb-6 { display: none !important; } 
-          body { background: white; margin: 0; padding: 0; }
-          .bg-white { box-shadow: none !important; border: none !important; }
-          .lg\\:col-span-2 { width: 100% !important; }
+          .no-print { display: none !important; }
+          .print-only { display: block !important; }
+          body { background: white; margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+          @page { margin: 0; }
         }
       `}</style>
     </div>

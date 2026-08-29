@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
   username: { type: String, default: "" },
   email: { type: String, default: "", lowercase: true, trim: true },
+  phone: { type: String, default: "" },
+  address: { type: String, default: "" },
   password: { type: String, required: true, select: false },
   role: { type: String, enum: ["admin", "user"], default: "user" },
 }, { timestamps: { createdAt: true, updatedAt: false } });

@@ -11,14 +11,21 @@ const ExpenseManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("August 2026"); // Default Start
-
-  // --- 1. GENERATE MONTHS LIST (Aug 2026 - Aug 2027) ---
-  const monthsList = [
-    "August 2026", "September 2026", "October 2026", "November 2026", "December 2026",
-    "January 2027", "February 2027", "March 2027", "April 2027", "May 2027", 
-    "June 2027", "July 2027", "August 2027"
-  ];
+  // --- 1. DYNAMIC MONTHS LIST (Current month on top) ---
+  const generateMonths = () => {
+    const months = [];
+    const date = new Date();
+    for (let i = 0; i < 24; i++) {
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      const year = date.getFullYear();
+      months.push(`${monthName} ${year}`);
+      date.setMonth(date.getMonth() - 1);
+    }
+    return months;
+  };
+  
+  const monthsList = useMemo(() => generateMonths(), []);
+  const [selectedMonth, setSelectedMonth] = useState(monthsList[0]);
 
   const emptyExpense = { 
     title: "", category: "General", amount: "", date: new Date().toISOString().split('T')[0], note: "" 

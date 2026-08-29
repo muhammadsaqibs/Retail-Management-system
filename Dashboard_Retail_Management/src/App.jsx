@@ -36,6 +36,7 @@ import Profile from './pages/profile.jsx';
 import DebtPage from './pages/debit.jsx';
 import AgencyPage from './pages/AgencyPage.jsx';
 import Branches from './pages/Branches.jsx';
+import Wholesalers from './pages/Wholesalers.jsx';
 
 const App = () => {
   const location = useLocation();
@@ -105,7 +106,7 @@ const App = () => {
             {/* Protected Routes */}
             <Route path='/admin/dashboard' element={user ? <Dashboard /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/products' element={user ? <ProductPage /> : <Navigate to='/admin/signUp' />} />
-            <Route path='/admin/all-users' element={user ? <Users /> : <Navigate to='/admin/signUp' />} />
+            <Route path='/admin/permissions' element={user ? <Users /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/staff' element={user ? <Staff /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/categories' element={user ? <Categories /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/stock' element={user ? <StockManagement /> : <Navigate to='/admin/signUp' />} />
@@ -124,7 +125,7 @@ const App = () => {
             <Route path='/admin/customerstatus' element={user ? <CustomerStatus /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/profile' element={user ? <Profile /> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/agencies' element={user ? <AgencyPage /> : <Navigate to='/admin/signUp' />} />
-            <Route path='/admin/branches' element={user ? <Branches /> : <Navigate to='/admin/signUp' />} />
+            <Route path='/admin/wholesalers' element={user ? <Wholesalers /> : <Navigate to='/admin/signUp' />} />
             
             <Route path='/admin/orders' element={user ? <Orders/> : <Navigate to='/admin/signUp' />} />
             <Route path='/admin/debt' element={user ? <DebtPage/>: <Navigate to='/admin/signUp' />} />

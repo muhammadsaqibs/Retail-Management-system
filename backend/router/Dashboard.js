@@ -6,6 +6,7 @@ import { Product } from "../models/product.model.js";
 import { Debt } from "../models/dabit.model.js";
 import { Agency } from "../models/agency.model.js";
 import { Rent } from "../router/rentRouter.js";
+import { Order } from "../models/order.model.js";
 
 const router = express.Router();
 
@@ -79,6 +80,8 @@ router.get("/stats", async (req, res) => {
       const revenue = productStats[0]?.totalSellingValue || 0;
       const cost = productStats[0]?.totalCostValue || 0;
 
+      const totalOrders = await Order.countDocuments();
+
       return res.status(200).json({
         success: true,
         stats: {
@@ -87,9 +90,10 @@ router.get("/stats", async (req, res) => {
           totalDebt: debtData[0]?.total || 0,
           totalProducts: totalProducts,
           totalAgencies: totalAgencies,
-          totalOrders: 0, // Placeholder for Orders collection
-          totalExpense: 0, // Placeholder for Expenses collection
-          totalStaff: 0    // Placeholder for Staff collection
+          totalOrders: totalOrders, 
+          totalWholesalers: 0, // Placeholder until wholesaler logic is implemented
+          totalExpense: 0, 
+          totalStaff: 0    
         }
       });
     }

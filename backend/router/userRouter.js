@@ -28,13 +28,15 @@ router.get("/check", protect, (req, res) => {
 // 2. Update Profile (Username/Email)
 router.put("/update-profile", protect, async (req, res) => {
   try {
-    const { username, email } = req.body;
+    const { username, email, phone, address } = req.body;
     const user = await User.findById(req.user.id);
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (username) user.username = username;
-    if (email) user.email = email;
+    if (username !== undefined) user.username = username;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (address !== undefined) user.address = address;
 
     await user.save();
     res.status(200).json({ message: "Profile updated successfully", user });
@@ -64,6 +66,20 @@ router.put("/change-password", protect, async (req, res) => {
 
     await user.save();
     res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+// 4. Update User Role (For Permissions)
+router.put("/update-role/:id", protect, async (req, res) => {
+  try {
+    const { role } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    user.role = role;
+    await user.save();
+    res.status(200).json({ message: "Role updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

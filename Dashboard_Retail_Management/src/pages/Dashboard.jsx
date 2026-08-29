@@ -62,7 +62,9 @@ const Dashboard = () => {
     { label: "Total Debt", count: `Rs. ${(dbStats?.totalDebt || 0).toLocaleString()}`, icon: <HandCoins size={22}/>, color: "#EF4444", bg: "bg-red-50", desc: "Customer Udhaar" },
     { label: "Stock Items", count: (dbStats?.totalProducts || 0).toLocaleString(), icon: <Package size={22}/>, color: "#8B5CF6", bg: "bg-purple-50", desc: "Total SKU" },
     { label: "Agencies", count: dbStats?.totalAgencies || "0", icon: <Building size={22}/>, color: "#64748B", bg: "bg-slate-50", desc: "Suppliers" },
-    { label: "Portal Status", count: "Secure", icon: <ShieldCheck size={22}/>, color: "#3B82F6", bg: "bg-blue-50", desc: "Active Session" },
+    { label: "Active Portal Login", count: "Secure", icon: <ShieldCheck size={22}/>, color: "#3B82F6", bg: "bg-blue-50", desc: "Current Session" },
+    { label: "Total Orders", count: dbStats?.totalOrders || "0", icon: <ShoppingCart size={22}/>, color: "#F59E0B", bg: "bg-yellow-50", desc: "Processed" },
+    { label: "Total Wholesalers", count: dbStats?.totalWholesalers || "0", icon: <Building size={22}/>, color: "#EC4899", bg: "bg-pink-50", desc: "Registered" },
   ];
 
   const currentStats = role === "admin" ? adminStats : storeStats;

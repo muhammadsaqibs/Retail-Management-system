@@ -178,7 +178,7 @@ const StoreManagement = () => {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                           <span className="text-[10px] font-bold text-gray-500 lowercase underline">{store.email}</span>
-                          <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">PASS: ••••••••</span>
+                          <span className="text-[9px] font-black text-[#13786E] tracking-widest">PASS: {store.password || "N/A"}</span>
                       </div>
                     </td>
 

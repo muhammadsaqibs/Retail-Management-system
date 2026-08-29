@@ -19,6 +19,8 @@ const Orders = () => {
   // --- 2. STATES ---
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [selectedOrder, setSelectedOrder] = useState(null); 
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -26,6 +28,7 @@ const Orders = () => {
     customer: "",
     payment: "Cash",
     status: "Pending",
+    description: "",
     items: [{ name: "", qty: 1, price: "" }]
   });
 
@@ -45,7 +48,7 @@ const Orders = () => {
     setNewOrder({ ...newOrder, items: updatedItems });
   };
 
-  const handleSaveOrder = (e) => {
+  const handleSaveOrder = (e, print = false) => {
     e.preventDefault();
     if (!newOrder.customer || newOrder.items[0].name === "") {
       return toast.error("Please fill customer name and at least one item");
@@ -56,7 +59,7 @@ const Orders = () => {
     const finalOrder = {
       ...newOrder,
       id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString(),
       amount: totalAmount,
     };
 
@@ -64,7 +67,11 @@ const Orders = () => {
     setShowAddModal(false);
     setSelectedOrder(finalOrder); 
     toast.success("Order Saved Successfully!");
-    setNewOrder({ customer: "", payment: "Cash", status: "Pending", items: [{ name: "", qty: 1, price: "" }] });
+    setNewOrder({ customer: "", payment: "Cash", status: "Pending", description: "", items: [{ name: "", qty: 1, price: "" }] });
+    
+    if (print) {
+      setTimeout(() => window.print(), 500); // Wait for modal to render
+    }
   };
 
   const deleteOrder = (id) => {
@@ -77,7 +84,15 @@ const Orders = () => {
   const filteredOrders = orders.filter(o => {
     const matchesSearch = o.customer.toLowerCase().includes(searchTerm.toLowerCase()) || o.id.includes(searchTerm);
     const matchesTab = activeTab === "All" || o.status === activeTab;
-    return matchesSearch && matchesTab;
+    let matchesDate = true;
+    if (fromDate && toDate) {
+      const orderDate = new Date(o.date);
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      matchesDate = orderDate >= start && orderDate <= end;
+    }
+    return matchesSearch && matchesTab && matchesDate;
   });
 
   return (
@@ -112,6 +127,13 @@ const Orders = () => {
               {tab}
              </button>
            ))}
+        </div>
+        
+        {/* Date Filter */}
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <input type="date" className="p-2 border rounded-xl text-xs font-bold text-gray-500 w-full md:w-auto" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          <span className="text-gray-400 font-black text-[10px]">TO</span>
+          <input type="date" className="p-2 border rounded-xl text-xs font-bold text-gray-500 w-full md:w-auto" value={toDate} onChange={(e) => setToDate(e.target.value)} />
         </div>
         
         {/* Search Input */}
@@ -194,6 +216,11 @@ const Orders = () => {
                     </select>
                   </div>
                 </div>
+                
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Order Description</label>
+                  <textarea rows="2" placeholder="Notes or description..." className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-[#13786E] text-sm font-bold" value={newOrder.description} onChange={(e) => setNewOrder({...newOrder, description: e.target.value})}></textarea>
+                </div>
 
                 <div className="space-y-4">
                    <div className="flex justify-between items-center border-b pb-2 border-gray-100">
@@ -229,7 +256,10 @@ const Orders = () => {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Grand Total</p>
                       <p className="text-2xl font-black text-[#13786E]">Rs. {newOrder.items.reduce((sum, item) => sum + (Number(item.qty || 0) * Number(item.price || 0)), 0).toLocaleString()}</p>
                    </div>
-                   <button type="submit" className="w-full md:w-auto px-12 py-4 bg-[#13786E] text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl transition-all hover:bg-teal-700">Save & Finish Order</button>
+                   <div className="flex gap-3 w-full md:w-auto">
+                     <button type="button" onClick={(e) => handleSaveOrder(e, false)} className="flex-1 md:flex-none px-8 py-4 bg-gray-800 text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl transition-all hover:bg-black">Save</button>
+                     <button type="button" onClick={(e) => handleSaveOrder(e, true)} className="flex-1 md:flex-none px-8 py-4 bg-[#13786E] text-white rounded-2xl font-black uppercase text-[11px] tracking-widest shadow-xl transition-all hover:bg-teal-700">Save & Print</button>
+                   </div>
                 </div>
              </form>
           </div>

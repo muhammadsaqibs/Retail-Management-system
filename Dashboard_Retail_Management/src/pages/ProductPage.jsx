@@ -41,7 +41,7 @@ const ProductPage = () => {
   const resetForm = () => {
     setProductForm({ 
       Name: "", Price: "", companyPrice: "", brandName: "", 
-      categoryId: "", Stock: "0", Discount: "0", Description: "" 
+      categoryId: "", Stock: "0", Discount: "0", Description: "", Barcode: "" 
     });
   };
 
@@ -61,8 +61,8 @@ const ProductPage = () => {
 
   const handleProductSubmit = (e) => {
     e.preventDefault();
-    if(!productForm.Name || !productForm.Price || !productForm.brandName || !productForm.categoryId || !productForm.companyPrice) {
-      return toast.error("Required: Name, Company Price, Selling Price, Brand, and Category");
+    if(!productForm.Name || !productForm.Price || !productForm.categoryId || !productForm.companyPrice) {
+      return toast.error("Required: Name, Company Price, Selling Price, and Category");
     }
     createProduct.mutate(productForm);
   };
@@ -104,6 +104,13 @@ const ProductPage = () => {
             />
           </div>
           <button 
+            onClick={() => { resetForm(); setActiveForm(activeForm === 'scanner' ? null : 'scanner'); }}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all"
+          >
+            {activeForm === 'scanner' ? <X size={18}/> : <Search size={18}/>}
+            {activeForm === 'scanner' ? "Discard" : "Scan Product"}
+          </button>
+          <button 
             onClick={() => { resetForm(); setActiveForm(activeForm === 'product' ? null : 'product'); }}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#13786E] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95 transition-all"
           >
@@ -129,18 +136,11 @@ const ProductPage = () => {
                 </select>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center gap-2"><Bookmark size={14} className="text-[#13786E]"/> Brand *</label>
-                <select className="bg-gray-50 border border-gray-200 p-4 rounded-2xl text-sm font-bold text-gray-700 outline-none focus:ring-2 focus:ring-[#13786E] w-full" value={productForm.brandName} onChange={(e)=>setProductForm({...productForm, brandName: e.target.value})}>
-                  <option value="">Select Brand</option>
-                  {brandsList.map((brand) => <option key={brand._id} value={brand.brandName}>{brand.brandName}</option>)}
-                </select>
-              </div>
-
               <FormInput label="Company Price *" type="number" icon={<Briefcase size={14}/>} value={productForm.companyPrice} onChange={(e)=>setProductForm({...productForm, companyPrice: e.target.value})} />
               <FormInput label="Selling Price *" type="number" icon={<DollarSign size={14}/>} value={productForm.Price} onChange={(e)=>setProductForm({...productForm, Price: e.target.value})} />
               <FormInput label="Stock Amount" type="number" icon={<Hash size={14}/>} value={productForm.Stock} onChange={(e)=>setProductForm({...productForm, Stock: e.target.value})} />
               <FormInput label="Discount (%)" type="number" icon={<Tag size={14}/>} value={productForm.Discount} onChange={(e)=>setProductForm({...productForm, Discount: e.target.value})} />
+              <FormInput label="Barcode" type="text" icon={<Hash size={14}/>} value={productForm.Barcode || ""} onChange={(e)=>setProductForm({...productForm, Barcode: e.target.value})} />
               
               <div className="sm:col-span-2 lg:col-span-1">
                  <FormInput label="Description" icon={<Layers size={14}/>} value={productForm.Description} onChange={(e)=>setProductForm({...productForm, Description: e.target.value})} />
@@ -163,9 +163,8 @@ const ProductPage = () => {
             <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-black text-gray-500 uppercase tracking-widest">
               <tr>
                 <th className="px-6 md:px-8 py-5">Product Info</th>
-                <th className="px-6 md:px-8 py-5 text-center">Stock</th>
+                <th className="px-6 md:px-8 py-5">Stock</th>
                 <th className="px-6 md:px-8 py-5">Pricing Details</th>
-                <th className="px-6 md:px-8 py-5">Brand</th>
                 <th className="px-6 md:px-8 py-5 text-center">Actions</th>
               </tr>
             </thead>
@@ -206,16 +205,25 @@ const ProductPage = () => {
                     </div>
                   </td>
                   <td className="px-6 md:px-8 py-5">
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">{p.brandName || "Generic"}</p>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Rs. {Number(p.companyPrice || 0).toLocaleString()} / Rs. {Number(p.Price).toLocaleString()}</p>
                   </td>
                   <td className="px-6 md:px-8 py-5 text-center">
-                    <button 
-                      onClick={() => handleDelete(p._id)} 
-                      className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors shadow-sm"
-                      title="Delete Product"
-                    >
-                      <Trash2 size={16}/>
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button 
+                        onClick={() => window.print()} 
+                        className="p-2.5 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors shadow-sm"
+                        title="Print Barcode"
+                      >
+                        Print Barcode
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(p._id)} 
+                        className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-colors shadow-sm"
+                        title="Delete Product"
+                      >
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -161,7 +161,15 @@ const Staff = () => {
               {/* Professional Info */}
               <div className="space-y-5">
                 <p className="text-[10px] font-black uppercase tracking-[2px] text-teal-600 border-b border-teal-50 pb-2">2. Job Assignment</p>
-                <InputField label="Designation" name="Designation" value={formData.Designation} onChange={handleInputChange} placeholder="e.g. Sales Executive" />
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Designation</label>
+                  <select name="Designation" value={formData.Designation} onChange={handleInputChange} className="border border-gray-200 p-3.5 rounded-2xl bg-gray-50 outline-none focus:ring-2 focus:ring-[#13786E] text-sm font-bold text-gray-700">
+                    <option value="">Select Designation</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Office Boy">Office Boy</option>
+                  </select>
+                </div>
                 <InputField label="CNIC Number" name="CNICnumber" value={formData.CNICnumber} onChange={handleInputChange} placeholder="XXXXX-XXXXXXX-X" />
                 <InputField label="Mobile Number" name="MobileNumber" value={formData.MobileNumber} onChange={handleInputChange} />
                 <InputField label="Current Address" name="Address" value={formData.Address} onChange={handleInputChange} />

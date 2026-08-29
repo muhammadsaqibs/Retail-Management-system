@@ -21,7 +21,7 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
   const role = storeUser ? "store" : (user?.role === "admin" ? "admin" : "admin");
 
   const displayBrandName = role === "store" ? storeUser?.name : "Apexiums";
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname.replace(/\/$/, '') === path.replace(/\/$/, '');
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -46,10 +46,10 @@ const Sidebar = ({ isMobileOpen, setMobileOpen }) => {
   ];
 
   const storeGroups = [
-    { group: "Main", links: [{ label: "Dashboard", icon: <LayoutDashboard size={18}/>, to: "/admin/storeDashboard" }, { label: "Billing", icon: <ReceiptCent size={18}/>, to: "/admin/billing" }] },
+    { group: "Main", links: [{ label: "Dashboard", icon: <LayoutDashboard size={18}/>, to: "/admin/dashboard" }, { label: "Billing", icon: <ReceiptCent size={18}/>, to: "/admin/billing" }] },
     { group: "Inventory", links: [{ label: "Products", icon: <Package size={18}/>, to: "/admin/products" }, { label: "Categories", icon: <Grid2X2 size={18}/>, to: "/admin/categories" }] },
-    { group: "Sales & Orders", links: [{ label: "Orders", icon: <ShoppingCart size={18}/>, to: "/admin/orders" }, { label: "Customers", icon: <Users size={18}/>, to: "/admin/customers" }, { label: "Debt / Udhaar", icon: <HandCoins size={18}/>, to: "/admin/debt" }] },
-    { group: "Partners", links: [{ label: "Whole Sellers", icon: <Truck size={18}/>, to: "/admin/wholesalers" }, { label: "Agencies", icon: <Building size={18}/>, to: "/admin/agencies" }, { label: "Branches", icon: <GitBranch size={18}/>, to: "/admin/branches" }] },
+    { group: "Sales & Orders", links: [{ label: "Orders", icon: <ShoppingCart size={18}/>, to: "/admin/orders" }, { label: "Sales", icon: <TrendingUp size={18}/>, to: "/admin/sales-reports" }, { label: "Customers", icon: <Users size={18}/>, to: "/admin/customers" }, { label: "Debt / Udhaar", icon: <HandCoins size={18}/>, to: "/admin/debt" }] },
+    { group: "Partners", links: [{ label: "Whole Sellers", icon: <Truck size={18}/>, to: "/admin/wholesalers" }, { label: "Agencies", icon: <Building size={18}/>, to: "/admin/agencies" }] },
     { group: "Management", links: [{ label: "Staff", icon: <UserCheck size={18}/>, to: "/admin/staff" }, { label: "Permissions", icon: <Lock size={18}/>, to: "/admin/permissions" }, { label: "Expense", icon: <TrendingDown size={18}/>, to: "/admin/expense" }, { label: "Revenue", icon: <TrendingUp size={18}/>, to: "/admin/revenue" }] }
   ];
 
