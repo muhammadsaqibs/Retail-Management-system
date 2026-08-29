@@ -4,8 +4,13 @@ import {
   X, Printer, Calendar, CreditCard, User, Plus, Minus, Package, Clock, Loader2
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 
 const Orders = () => {
+  const { data: authData } = useQuery({ queryKey: ["authUser"] });
+  const storeUser = JSON.parse(localStorage.getItem("activeStore"));
+  const profile = authData?.user || storeUser;
+
   // --- 1. INITIAL DATA ---
   const [orders, setOrders] = useState(() => {
     const savedOrders = localStorage.getItem("apex_orders_list");
@@ -272,8 +277,10 @@ const Orders = () => {
           <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] w-full max-w-xl max-h-[95vh] overflow-y-auto shadow-2xl overflow-hidden print:shadow-none print:rounded-none">
             <div className="p-6 md:p-10">
                <div className="text-center border-b border-dashed border-gray-200 pb-6">
-                  <h2 className="text-2xl font-black uppercase tracking-tighter text-[#13786E]">Apexiums Retail</h2>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[4px]">Invoice Receipt</p>
+                  <h2 className="text-2xl font-black uppercase tracking-tighter text-[#13786E]">{profile?.username || profile?.name || "Apexiums Retail"}</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[2px]">{profile?.address || "Address Not Provided"}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[2px] mb-2">Tel: {profile?.phone || profile?.contact || "N/A"}</p>
+                  <p className="text-[10px] font-bold text-[#13786E] uppercase tracking-[4px] bg-teal-50 inline-block px-3 py-1 rounded-full">Invoice Receipt</p>
                </div>
                
                <div className="py-6 grid grid-cols-2 gap-y-4 text-[11px] font-black text-gray-500 uppercase">

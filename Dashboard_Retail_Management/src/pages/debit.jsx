@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { 
-  Plus, Trash2, Search, User, ShoppingBag, DollarSign, 
-  Calendar, MapPin, Phone, X, RefreshCw, ClipboardList, Loader2 
-} from "lucide-react";
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import { Plus, Trash2, Search, User, ShoppingBag, DollarSign, Calendar, MapPin, Phone, X, RefreshCw, ClipboardList, Loader2, Printer } from "lucide-react";
+import { useMutation, useQueries, useQueryClient, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axios";
 import { toast } from "react-toastify";
 
@@ -11,6 +9,11 @@ const DebtPage = () => {
   const [activeForm, setActiveForm] = useState(null);
   const [searchItem, setSearchItem] = useState("");
   const queryClient = useQueryClient();
+  const [selectedDebtForPrint, setSelectedDebtForPrint] = useState(null);
+
+  const { data: authData } = useQuery({ queryKey: ["authUser"] });
+  const storeUser = JSON.parse(localStorage.getItem("activeStore"));
+  const profile = authData?.user || storeUser;
 
   // 1. DATA FETCHING
   const results = useQueries({
@@ -167,13 +170,14 @@ const DebtPage = () => {
                     </div>
                   </td>
                   <td className="px-6 md:px-8 py-5 text-center">
-                    <button 
-                      onClick={() => handleDelete(d._id)} 
-                      className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-all shadow-sm"
-                      title="Delete Record"
-                    >
-                      <Trash2 size={16}/>
-                    </button>
+                      <button 
+                        onClick={() => setSelectedDebtForPrint(d)}
+                        className="p-2.5 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-100 transition-all shadow-sm"
+                        title="Print Udhaar Receipt"
+                      >
+                        <Printer size={16}/>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -181,6 +185,80 @@ const DebtPage = () => {
           </table>
         </div>
       </div>
+
+      {/* --- INVOICE VIEW MODAL - Mobile Optimized --- */}
+      {selectedDebtForPrint && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[1000] flex items-center justify-center p-2 md:p-4">
+          <div className="bg-white rounded-[1.5rem] md:rounded-[2rem] w-full max-w-xl max-h-[95vh] overflow-y-auto shadow-2xl overflow-hidden print:shadow-none print:rounded-none">
+            <div className="p-6 md:p-10">
+               <div className="text-center border-b border-dashed border-gray-200 pb-6">
+                  <h2 className="text-2xl font-black uppercase tracking-tighter text-[#13786E]">{profile?.username || profile?.name || "Apexiums Retail"}</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[2px]">{profile?.address || "Address Not Provided"}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[2px] mb-2">Tel: {profile?.phone || profile?.contact || "N/A"}</p>
+                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-[4px] bg-orange-50 inline-block px-3 py-1 rounded-full">Udhaar (Credit) Receipt</p>
+               </div>
+               
+               <div className="py-6 grid grid-cols-2 gap-y-4 text-[11px] font-black text-gray-500 uppercase">
+                  <div className="text-left">
+                     <p className="text-gray-400">Customer (Udhaar To):</p>
+                     <p className="text-gray-800 text-sm truncate">{selectedDebtForPrint.customerName}</p>
+                     <p className="text-gray-500">{selectedDebtForPrint.contact}</p>
+                  </div>
+                  <div className="text-right">
+                     <p className="text-gray-400">Debt ID:</p>
+                     <p className="text-gray-800 text-sm">{selectedDebtForPrint._id?.substring(0, 8) || "N/A"}</p>
+                  </div>
+                  <div className="text-left mt-2 border-t border-gray-100 pt-2">
+                     <p className="text-gray-400">Issued On:</p>
+                     <p className="text-gray-800">{new Date(selectedDebtForPrint.debtDate).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right mt-2 border-t border-gray-100 pt-2">
+                     <p className="text-gray-400">Due Date:</p>
+                     <p className="text-orange-600">{selectedDebtForPrint.expectedPayDate ? new Date(selectedDebtForPrint.expectedPayDate).toLocaleDateString() : "Not Specified"}</p>
+                  </div>
+               </div>
+
+               <div className="border-t border-b border-gray-100 py-4">
+                  <table className="w-full text-left">
+                     <thead className="text-[9px] font-black text-gray-400 uppercase">
+                        <tr>
+                          <th className="pb-2">Items/Description</th>
+                        </tr>
+                     </thead>
+                     <tbody className="text-xs font-bold text-gray-700">
+                          <tr>
+                            <td className="py-2">{selectedDebtForPrint.products || "Multiple Items"}</td>
+                          </tr>
+                     </tbody>
+                  </table>
+               </div>
+
+               <div className="flex justify-between items-center pt-6">
+                  <p className="text-sm font-black uppercase text-gray-400">Total Udhaar</p>
+                  <p className="text-2xl font-black text-red-600">Rs. {Number(selectedDebtForPrint.amount).toLocaleString()}</p>
+               </div>
+
+               <div className="flex flex-col sm:flex-row gap-3 pt-8 print:hidden">
+                <button onClick={() => setSelectedDebtForPrint(null)} className="flex-1 py-4 border border-gray-200 rounded-2xl font-black text-gray-400 uppercase text-[10px] hover:bg-gray-50 transition-all">Close</button>
+                <button onClick={() => window.print()} className="flex-1 py-4 bg-[#13786E] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 shadow-xl hover:bg-teal-700 transition-all"><Printer size={16}/> Print Bill</button>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @media print { 
+          .lg\\:ml-64, button, .mt-14, .mb-8, .text-center.lg\\:text-left { display: none !important; } 
+          body { background: white !important; padding: 0 !important; }
+          .min-h-screen { min-height: auto !important; padding: 0 !important; margin: 0 !important; }
+          .fixed { position: static !important; background: white !important; padding: 0 !important; }
+          .max-w-xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
+          .bg-\\[\\#F8FAFC\\] { background: white !important; }
+        }
+      `}</style>
     </div>
   );
 };
