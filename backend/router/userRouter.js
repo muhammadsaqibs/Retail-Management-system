@@ -1,5 +1,5 @@
 import express from "express";
-import { registerUser, logout, getAllUsers } from "../Controller/userController.js";
+import { registerUser, logout, getAllUsers, loginUser } from "../Controller/userController.js";
 import { body } from 'express-validator';
 import { protect } from "../middleware/auth.js";
 import User from "../models/user.model.js"; // User model lazmi import karein
@@ -12,6 +12,8 @@ router.post('/signup', [
   body('identifier').notEmpty().withMessage('Email or username required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
 ], registerUser);
+
+router.post('/login', loginUser);
 
 router.post('/logout', logout);
 

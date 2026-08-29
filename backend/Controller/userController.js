@@ -66,3 +66,38 @@ export const getAllUsers = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+// Login handler
+export const loginUser = async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Identifier and password are required" });
+    }
+
+    const user = await User.findOne({ 
+      $or: [{ email: identifier }, { username: identifier }] 
+    });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ id: user._id.toString(), role: user.role }, process.env.JWT_SECRET || 'mysecret');
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    res.status(200).json({ success: true, message: "Login successful", user, token });
+  } catch (err) {
+    console.error("Login error:", err.message);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

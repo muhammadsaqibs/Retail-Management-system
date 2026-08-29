@@ -14,6 +14,6 @@ export const newUser = async({
         role
 
         })
-        const token = jwt.sign({ id: user._id.toString(), role: user.role }, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: user._id.toString(), role: user.role }, process.env.JWT_SECRET || 'mysecret');
         return {user , token};
     };
